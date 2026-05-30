@@ -97,11 +97,16 @@ fondo_listo = (tipo_bg == "Plantilla" and bg_file is not None) or tipo_bg != "Pl
 if fondo_listo:
     lista_frases = [f.strip() for f in frases_bulk.split('\n') if f.strip()][:num_posts]
     
-    try:
-        # Nota: Si subes esto a la nube, asegúrate de que la ruta de la fuente sea compatible o usa una local en tu proyecto.
-        f_reg = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", tamano_f)
-        f_bold = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", tamano_f, index=1)
-    except:
+    archivo_fuente_regular = "Roboto-Regular.ttf"
+    archivo_fuente_bold = "Roboto-Bold.ttf"
+
+    if os.path.exists(archivo_fuente_regular) and os.path.exists(archivo_fuente_bold):
+    # Si los archivos existen en la carpeta (local o en la nube), los carga con el tamaño dinámico
+        f_reg = ImageFont.truetype(archivo_fuente_regular, tamano_f)
+        f_bold = ImageFont.truetype(archivo_fuente_bold, tamano_f)
+    else:
+    # Respaldo por si se borran accidentalmente los archivos .ttf
+        st.sidebar.warning("⚠️ No se encontraron los archivos .ttf en la carpeta. Usando fuente del sistema.")
         f_reg = f_bold = ImageFont.load_default()
 
     st.header(f"🖼️ Vista Previa ({formato})")
