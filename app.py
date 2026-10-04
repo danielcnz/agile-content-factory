@@ -4,10 +4,57 @@ from PIL import Image, ImageDraw, ImageFont
 import re
 import numpy as np
 from datetime import datetime
-import io       # <-- IMPORTANTE: Para manejar la memoria RAM
-import zipfile  # <-- IMPORTANTE: Para empaquetar el lote en un archivo comprimido
+import io
+import zipfile
+import requests
 
 # --- FUNCIONES TÉCNICAS ---
+
+def validar_licencia_lemonsqueezy(license_key):
+    """Consulta la API de Lemon Squeezy para verificar la validez de la clave."""
+    if not license_key:
+        return False
+    try:
+        url = "https://api.lemonsqueezy.com/v1/licenses/validate"
+        res = requests.post(url, data={"license_key": license_key.strip()}, timeout=5)
+        data = res.json()
+        return data.get("valid", False)
+    except Exception:
+        return False
+
+def aplicar_marca_agua_centrada(img_base, texto="AGILE CONTENT FACTORY - FREE"):
+    """Estampa una marca de agua semitransparente rotada en el centro del post."""
+    ancho, alto = img_base.size
+    
+    # Capa intermedia transparente
+    capa_wm = Image.new("RGBA", (ancho, alto), (0, 0, 0, 0))
+    draw_wm = ImageDraw.Draw(capa_wm)
+    
+    tamano_wm = int(ancho * 0.055)
+    try:
+        font_wm = ImageFont.truetype("Roboto-Bold.ttf", tamano_wm)
+    except Exception:
+        font_wm = ImageFont.load_default()
+        
+    bbox = draw_wm.textbbox((0, 0), texto, font=font_wm)
+    w_t = bbox[2] - bbox[0]
+    h_t = bbox[3] - bbox[1]
+    
+    # Imagen temporal para rotar el texto con comodidad
+    img_texto = Image.new("RGBA", (w_t + 60, h_t + 40), (0, 0, 0, 0))
+    draw_txt = ImageDraw.Draw(img_texto)
+    # Color blanco semitransparente (RGBA: canal alfa en 85 sobre 255)
+    draw_txt.text((30, 20), texto, font=font_wm, fill=(255, 255, 255, 85))
+    
+    # Rotación ligera de 25 grados
+    texto_rotado = img_texto.rotate(25, expand=True, resample=Image.Resampling.BICUBIC)
+    
+    # Posicionamiento centrado
+    pos_x = (ancho - texto_rotado.width) // 2
+    pos_y = (alto - texto_rotado.height) // 2
+    capa_wm.paste(texto_rotado, (pos_x, pos_y), texto_rotado)
+    
+    return Image.alpha_composite(img_base, capa_wm)
 
 def crear_degradado_rgb(ancho, alto, c1_hex, c2_hex):
     c1 = tuple(int(c1_hex.lstrip('#')[i:i+2], 16) for i in (0, 2, 4))
@@ -44,7 +91,11 @@ def dibujar_frase_estilizada(draw, frase, ancho, alto, f_reg, f_bold, c_pri, c_s
         else:
             lineas.append(linea_act)
             linea_act, ancho_acum = [p], ancho_p + espacio
-    lineas.append(linea_act)
+    if linea_act:
+        lineas.append(linea_act)
+
+    if not lineas:
+        return
 
     y_act = (alto - (len(lineas) * alto_linea)) // 2
     for linea in lineas:
@@ -61,11 +112,29 @@ st.set_page_config(page_title="Agile Content Factory Pro", layout="wide")
 with st.sidebar:
     st.header("⚙️ Configuración")
     
+    # --- CONTROL DE LICENCIA PRO ---
+    st.subheader("👑 Licencia")
+    licencia_input = st.text_input("Clave Pro (Opcional)", type="password", help="Ingresa tu clave de compra para eliminar la marca de agua")
+    
+    es_pro = validar_licencia_lemonsqueezy(licencia_input)
+    
+    if es_pro:
+        st.success("🌟 Plan Pro Activo: Sin marca de agua y hasta 100 posts.")
+        limite_maximo = 100
+        default_posts = 10
+    else:
+        st.info("Versión Gratuita: Hasta 3 posts con marca de agua.")
+        # Reemplaza la URL por el enlace real a tu checkout cuando lo crees
+        st.markdown("[👉 **Comprar Licencia Pro**](https://lemonsqueezy.com)")
+        limite_maximo = 3
+        default_posts = 3
+        
+    st.divider()
+
     st.subheader("1. Formato")
     formato = st.radio("Tamaño del Post", ["1080x1080 (Cuadrado)", "1080x1350 (Retrato)"])
     ancho, alto = (1080, 1080) if "1080x1080" in formato else (1080, 1350)
     
-    st.divider()
     st.subheader("2. Identidad (Opcional)")
     logo_file = st.file_uploader("Logo (PNG transparente)", type=["png"])
     tamano_logo = st.slider("Tamaño Logo", 50, 400, 180) if logo_file else 0
@@ -86,12 +155,11 @@ with st.sidebar:
     c_sec = st.color_picker("Color Destacado", "#FFD700")
     tamano_f = st.slider("Tamaño Letra", 40, 150, 85)
     
-    num_posts = st.number_input("Cantidad a procesar", 1, 100, 3)
+    num_posts = st.number_input("Cantidad a procesar", 1, limite_maximo, default_posts)
 
 st.title("🚀 Agile Content Factory")
 frases_bulk = st.text_area("Frases (una por línea):", "Automatiza tu [negocio]\nUsa [Python] hoy\nMarketing [inteligente]", height=150)
 
-# Validación de fondo para mostrar previsualización
 fondo_listo = (tipo_bg == "Plantilla" and bg_file is not None) or tipo_bg != "Plantilla"
 
 if fondo_listo:
@@ -101,11 +169,9 @@ if fondo_listo:
     archivo_fuente_bold = "Roboto-Bold.ttf"
 
     if os.path.exists(archivo_fuente_regular) and os.path.exists(archivo_fuente_bold):
-    # Si los archivos existen en la carpeta (local o en la nube), los carga con el tamaño dinámico
         f_reg = ImageFont.truetype(archivo_fuente_regular, tamano_f)
         f_bold = ImageFont.truetype(archivo_fuente_bold, tamano_f)
     else:
-    # Respaldo por si se borran accidentalmente los archivos .ttf
         st.sidebar.warning("⚠️ No se encontraron los archivos .ttf en la carpeta. Usando fuente del sistema.")
         f_reg = f_bold = ImageFont.load_default()
 
@@ -114,7 +180,6 @@ if fondo_listo:
     imagenes_finales = []
 
     for i, frase in enumerate(lista_frases):
-        # Lógica de Fondo
         if tipo_bg == "Plantilla" and bg_file:
             img = Image.open(bg_file).convert("RGBA").resize((ancho, alto))
         elif tipo_bg == "Color Plano":
@@ -125,43 +190,36 @@ if fondo_listo:
         draw = ImageDraw.Draw(img)
         dibujar_frase_estilizada(draw, frase, ancho, alto, f_reg, f_bold, c_pri, c_sec, modo_fuente)
         
-        # Logo (Solo si existe)
         if logo_file:
             logo_img = Image.open(logo_file).convert("RGBA")
             logo_img.thumbnail((tamano_logo, tamano_logo))
             img.paste(logo_img, (ancho - tamano_logo - 40, alto - tamano_logo - 40), logo_img)
         
+        # Inyección de marca de agua central si no es Pro
+        if not es_pro:
+            img = aplicar_marca_agua_centrada(img, texto="AGILE CONTENT FACTORY - FREE")
+        
         imagenes_finales.append(img)
         with cols[i % 3]:
             st.image(img, caption=f"Post {i+1}", use_container_width=True)
 
-    # --- NUEVA LÓGICA DE EXPORTACIÓN DIRECTA AL DISCO DURO (COMPATIBLE CON GITHUB) ---
     st.divider()
     
     if imagenes_finales:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         
-        # 1. Crear un contenedor temporal en la memoria RAM para el archivo ZIP
         zip_buffer = io.BytesIO()
-        
-        # 2. Escribir las imágenes dentro del ZIP en memoria
         with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
             for idx, img_save in enumerate(imagenes_finales):
-                # Crear un buffer temporal de bytes para cada imagen individual
                 img_bytes_buffer = io.BytesIO()
                 img_save.save(img_bytes_buffer, format="PNG")
                 img_bytes_buffer.seek(0)
                 
-                # Definir el nombre que tendrá la imagen dentro del paquete comprimido
                 nombre_archivo = f"post_{timestamp}_{idx+1}.png"
-                
-                # Inyectar la imagen al archivo ZIP
                 zip_file.writestr(nombre_archivo, img_bytes_buffer.getvalue())
         
-        # 3. Colocar el puntero del buffer al inicio para que pueda ser leído completamente
         zip_buffer.seek(0)
         
-        # 4. Botón nativo de Streamlit para descargar directo al equipo
         st.download_button(
             label=f"💾 DESCARGAR LOS {len(imagenes_finales)} POSTS EN .ZIP",
             data=zip_buffer,
