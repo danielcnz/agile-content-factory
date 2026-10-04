@@ -132,95 +132,141 @@ st.set_page_config(page_title="Agile Content Factory Pro", layout="wide")
 
 st.markdown("""
 <style>
-    /* Tipografía y espaciado general */
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
     
-    html, body, [class*="css"] {
-        font-family: 'Plus Jakarta Sans', sans-serif;
+    /* 1. Fondo global claro y tipografía */
+    html, body, [data-testid="stAppViewContainer"] {
+        background-color: #F8F9FA !important;
+        font-family: 'Plus Jakarta Sans', sans-serif !important;
+        color: #1A1A1A !important;
     }
 
-    /* Barra lateral moderna */
-    [data-testid="stSidebar"] {
-        background-color: #0f172a; /* Fondo pizarra oscuro elegante */
-        color: #f8fafc;
-        border-right: 1px solid rgba(255, 255, 255, 0.08);
+    [data-testid="stHeader"] {
+        background-color: rgba(248, 249, 250, 0.8) !important;
     }
-    
+
+    /* 2. Barra lateral estilo panel flotante */
+    [data-testid="stSidebar"] {
+        background-color: #FFFFFF !important;
+        border-right: 1px solid #E9ECEF !important;
+        box-shadow: 2px 0 12px rgba(0, 0, 0, 0.02) !important;
+    }
+
     [data-testid="stSidebar"] h1, 
     [data-testid="stSidebar"] h2, 
-    [data-testid="stSidebar"] h3 {
-        color: #f1f5f9 !important;
-        font-weight: 700;
-        letter-spacing: -0.02em;
-    }
-    
-    [data-testid="stSidebar"] label {
-        color: #cbd5e1 !important;
-        font-size: 0.88rem !important;
-        font-weight: 600 !important;
+    [data-testid="stSidebar"] h3, 
+    [data-testid="stSidebar"] h4 {
+        color: #111827 !important;
+        font-weight: 700 !important;
+        letter-spacing: -0.02em !important;
     }
 
-    /* Estilo de la caja de llamada a la acción en la barra lateral */
+    [data-testid="stSidebar"] label {
+        color: #4B5563 !important;
+        font-weight: 600 !important;
+        font-size: 0.85rem !important;
+    }
+
+    /* 3. Tarjeta de Licencia / Upgrade (Estilo moderno naranja / marrón sutil) */
     .upgrade-card {
-        background: linear-gradient(135deg, rgba(234, 88, 12, 0.15) 0%, rgba(249, 115, 22, 0.05) 100%);
-        border: 1px solid rgba(249, 115, 22, 0.35);
-        border-radius: 12px;
-        padding: 16px;
+        background: #FFF7ED; /* Crema / naranja muy suave */
+        border: 1px solid #FDBA74;
+        border-radius: 16px;
+        padding: 18px;
         margin-top: 10px;
-        margin-bottom: 20px;
+        margin-bottom: 24px;
+        box-shadow: 0 4px 12px rgba(234, 88, 12, 0.06);
     }
     .upgrade-card p {
-        color: #fed7aa;
-        font-size: 0.85rem;
-        margin-bottom: 10px;
+        color: #9A3412 !important; /* Marrón teja cálido */
+        font-size: 0.84rem;
+        margin-bottom: 12px;
+        line-height: 1.4;
     }
     .upgrade-btn {
         display: block;
         text-align: center;
-        background: linear-gradient(90deg, #ea580c, #f97316);
-        color: #ffffff !important;
+        background: #EA580C; /* Naranja enérgico */
+        color: #FFFFFF !important;
         font-weight: 700;
-        font-size: 0.9rem;
-        padding: 10px 14px;
-        border-radius: 8px;
+        font-size: 0.88rem;
+        padding: 10px 16px;
+        border-radius: 12px;
         text-decoration: none;
-        box-shadow: 0 4px 12px rgba(234, 88, 12, 0.3);
-        transition: transform 0.15s ease;
+        box-shadow: 0 4px 10px rgba(234, 88, 12, 0.25);
+        transition: all 0.2s ease;
     }
     .upgrade-btn:hover {
+        background: #C2410C;
         transform: translateY(-1px);
-        box-shadow: 0 6px 16px rgba(234, 88, 12, 0.4);
+        box-shadow: 0 6px 14px rgba(234, 88, 12, 0.35);
     }
 
-    /* Encabezado principal */
-    .main-title {
-        font-size: 2.2rem;
-        font-weight: 800;
-        letter-spacing: -0.03em;
-        color: #0f172a;
-        margin-bottom: 0.2rem;
+    /* 4. Inputs, selects y textareas redondeados estilo tarjeta */
+    .stTextInput > div > div > input,
+    .stTextArea > div > div > textarea,
+    .stNumberInput > div > div > input {
+        background-color: #FFFFFF !important;
+        border: 1px solid #E5E7EB !important;
+        border-radius: 12px !important;
+        color: #111827 !important;
+        font-size: 0.9rem !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
     }
-    .main-subtitle {
-        color: #64748b;
-        font-size: 1rem;
-        margin-bottom: 1.5rem;
+    .stTextInput > div > div > input:focus,
+    .stTextArea > div > div > textarea:focus {
+        border-color: #EA580C !important;
+        box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.15) !important;
     }
 
-    /* Botón de descarga principal destacado */
+    /* 5. Tarjetas para cada columna de vista previa */
+    [data-testid="column"] {
+        background-color: #FFFFFF;
+        border: 1px solid #E5E7EB;
+        border-radius: 18px;
+        padding: 14px 14px 6px 14px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    [data-testid="column"]:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+    }
+    [data-testid="column"] img {
+        border-radius: 12px;
+    }
+
+    /* 6. Botón de descarga principal (Negro elegante con detalles sutiles) */
     .stDownloadButton button {
-        background: linear-gradient(90deg, #2563eb, #1d4ed8) !important;
-        color: white !important;
+        background: #111827 !important; /* Negro antracita / Charcoal */
+        color: #FFFFFF !important;
         font-weight: 700 !important;
-        font-size: 1.05rem !important;
-        padding: 0.75rem 2rem !important;
-        border-radius: 10px !important;
-        border: none !important;
-        box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35) !important;
+        font-size: 0.95rem !important;
+        padding: 0.8rem 2.2rem !important;
+        border-radius: 14px !important;
+        border: 1px solid #1F2937 !important;
+        box-shadow: 0 4px 14px rgba(17, 24, 39, 0.2) !important;
         transition: all 0.2s ease !important;
     }
     .stDownloadButton button:hover {
-        transform: translateY(-2px) !important;
-        box-shadow: 0 6px 20px rgba(37, 99, 235, 0.45) !important;
+        background: #000000 !important;
+        transform: translateY(-1px) !important;
+        box-shadow: 0 6px 18px rgba(17, 24, 39, 0.3) !important;
+    }
+
+    /* 7. Encabezados de la vista principal */
+    .main-title {
+        font-size: 2.1rem;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        color: #111827;
+        margin-bottom: 0.25rem;
+    }
+    .main-subtitle {
+        color: #6B7280;
+        font-size: 0.95rem;
+        margin-bottom: 1.8rem;
     }
 </style>
 """, unsafe_allow_html=True)
