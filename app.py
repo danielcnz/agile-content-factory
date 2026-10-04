@@ -32,14 +32,13 @@ def validar_licencia_lemonsqueezy(license_key):
         return False
 
 def aplicar_marca_agua_centrada(img_base, texto="AGILE CONTENT FACTORY - FREE"):
-    """Estampa una marca de agua semitransparente rotada en el centro del post."""
+    """Estampa una marca de agua de alta visibilidad con fondo semitransparente."""
     ancho, alto = img_base.size
     
-    # Capa intermedia transparente
     capa_wm = Image.new("RGBA", (ancho, alto), (0, 0, 0, 0))
     draw_wm = ImageDraw.Draw(capa_wm)
     
-    tamano_wm = int(ancho * 0.055)
+    tamano_wm = int(ancho * 0.065)
     try:
         font_wm = ImageFont.truetype("Roboto-Bold.ttf", tamano_wm)
     except Exception:
@@ -49,16 +48,29 @@ def aplicar_marca_agua_centrada(img_base, texto="AGILE CONTENT FACTORY - FREE"):
     w_t = bbox[2] - bbox[0]
     h_t = bbox[3] - bbox[1]
     
-    # Imagen temporal para rotar el texto con comodidad
-    img_texto = Image.new("RGBA", (w_t + 60, h_t + 40), (0, 0, 0, 0))
+    pad_x, pad_y = 40, 20
+    ancho_badge = w_t + (pad_x * 2)
+    alto_badge = h_t + (pad_y * 2)
+    
+    # Placa o cinta con fondo oscuro translúcido y texto blanco nítido
+    img_texto = Image.new("RGBA", (ancho_badge, alto_badge), (0, 0, 0, 0))
     draw_txt = ImageDraw.Draw(img_texto)
-    # Color blanco semitransparente (RGBA: canal alfa en 85 sobre 255)
-    draw_txt.text((30, 20), texto, font=font_wm, fill=(255, 255, 255, 85))
     
-    # Rotación ligera de 25 grados
-    texto_rotado = img_texto.rotate(25, expand=True, resample=Image.Resampling.BICUBIC)
+    # Fondo rectangular oscuro semitransparente detrás del texto
+    draw_txt.rounded_rectangle(
+        [(0, 0), (ancho_badge, alto_badge)],
+        radius=18,
+        fill=(15, 23, 42, 175),       # Azul noche oscuro con buena opacidad
+        outline=(255, 255, 255, 120), # Borde fino blanco
+        width=2
+    )
     
-    # Posicionamiento centrado
+    # Texto blanco de alto contraste
+    draw_txt.text((pad_x, pad_y), texto, font=font_wm, fill=(255, 255, 255, 230))
+    
+    # Rotación en ángulo diagonal
+    texto_rotado = img_texto.rotate(22, expand=True, resample=Image.Resampling.BICUBIC)
+    
     pos_x = (ancho - texto_rotado.width) // 2
     pos_y = (alto - texto_rotado.height) // 2
     capa_wm.paste(texto_rotado, (pos_x, pos_y), texto_rotado)
@@ -118,23 +130,126 @@ def dibujar_frase_estilizada(draw, frase, ancho, alto, f_reg, f_bold, c_pri, c_s
 # --- INTERFAZ ---
 st.set_page_config(page_title="Agile Content Factory Pro", layout="wide")
 
+st.markdown("""
+<style>
+    /* Tipografía y espaciado general */
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+    
+    html, body, [class*="css"] {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    /* Barra lateral moderna */
+    [data-testid="stSidebar"] {
+        background-color: #0f172a; /* Fondo pizarra oscuro elegante */
+        color: #f8fafc;
+        border-right: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    
+    [data-testid="stSidebar"] h1, 
+    [data-testid="stSidebar"] h2, 
+    [data-testid="stSidebar"] h3 {
+        color: #f1f5f9 !important;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+    }
+    
+    [data-testid="stSidebar"] label {
+        color: #cbd5e1 !important;
+        font-size: 0.88rem !important;
+        font-weight: 600 !important;
+    }
+
+    /* Estilo de la caja de llamada a la acción en la barra lateral */
+    .upgrade-card {
+        background: linear-gradient(135deg, rgba(234, 88, 12, 0.15) 0%, rgba(249, 115, 22, 0.05) 100%);
+        border: 1px solid rgba(249, 115, 22, 0.35);
+        border-radius: 12px;
+        padding: 16px;
+        margin-top: 10px;
+        margin-bottom: 20px;
+    }
+    .upgrade-card p {
+        color: #fed7aa;
+        font-size: 0.85rem;
+        margin-bottom: 10px;
+    }
+    .upgrade-btn {
+        display: block;
+        text-align: center;
+        background: linear-gradient(90deg, #ea580c, #f97316);
+        color: #ffffff !important;
+        font-weight: 700;
+        font-size: 0.9rem;
+        padding: 10px 14px;
+        border-radius: 8px;
+        text-decoration: none;
+        box-shadow: 0 4px 12px rgba(234, 88, 12, 0.3);
+        transition: transform 0.15s ease;
+    }
+    .upgrade-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(234, 88, 12, 0.4);
+    }
+
+    /* Encabezado principal */
+    .main-title {
+        font-size: 2.2rem;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        color: #0f172a;
+        margin-bottom: 0.2rem;
+    }
+    .main-subtitle {
+        color: #64748b;
+        font-size: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    /* Botón de descarga principal destacado */
+    .stDownloadButton button {
+        background: linear-gradient(90deg, #2563eb, #1d4ed8) !important;
+        color: white !important;
+        font-weight: 700 !important;
+        font-size: 1.05rem !important;
+        padding: 0.75rem 2rem !important;
+        border-radius: 10px !important;
+        border: none !important;
+        box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35) !important;
+        transition: all 0.2s ease !important;
+    }
+    .stDownloadButton button:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 20px rgba(37, 99, 235, 0.45) !important;
+    }
+</style>
+""", unsafe_allow_html=True)
+
 with st.sidebar:
     st.header("⚙️ Configuración")
     
     # --- CONTROL DE LICENCIA PRO ---
-    st.subheader("👑 Licencia")
-    licencia_input = st.text_input("Clave Pro (Opcional)", type="password", help="Ingresa tu clave de compra para eliminar la marca de agua")
+    st.markdown("### ⚙️ Configuración")
+    
+    st.markdown("#### 👑 Estado de Licencia")
+    licencia_input = st.text_input("Ingresa tu clave de acceso", type="password", placeholder="Pegar clave aquí...")
     
     es_pro = validar_licencia_lemonsqueezy(licencia_input)
     
     if es_pro:
-        st.success("🌟 Plan Pro Activo: Sin marca de agua y hasta 100 posts.")
+        st.success("🌟 **Modo Pro Activo**\nDescargas limpias y hasta 100 posts.")
         limite_maximo = 100
         default_posts = 10
     else:
-        st.info("Versión Gratuita: Hasta 3 posts con marca de agua.")
-        # Reemplaza la URL por el enlace real a tu checkout cuando lo crees
-        st.markdown("[👉 **Comprar Licencia Pro**](https://lemonsqueezy.com)")
+        # Aquí se dibuja la tarjeta moderna en vez del enlace plano st.markdown(...)
+        st.markdown("""
+        <div class="upgrade-card">
+            <p><strong>Versión Demo activa</strong><br>Máximo 3 posts con marca de agua central.</p>
+            <a href="https://lemonsqueezy.com" target="_blank" class="upgrade-btn">
+                ⚡ Desbloquear Modo Pro
+            </a>
+        </div>
+        """, unsafe_allow_html=True)
         limite_maximo = 3
         default_posts = 3
         
@@ -166,7 +281,8 @@ with st.sidebar:
     
     num_posts = st.number_input("Cantidad a procesar", 1, limite_maximo, default_posts)
 
-st.title("🚀 Agile Content Factory")
+st.markdown('<div class="main-title">🚀 Agile Content Factory</div>', unsafe_allow_html=True)
+st.markdown('<div class="main-subtitle">Diseña y genera lotes de imágenes optimizadas para redes sociales en segundos.</div>', unsafe_allow_html=True)
 frases_bulk = st.text_area("Frases (una por línea):", "Automatiza tu [negocio]\nUsa [Python] hoy\nMarketing [inteligente]", height=150)
 
 fondo_listo = (tipo_bg == "Plantilla" and bg_file is not None) or tipo_bg != "Plantilla"
