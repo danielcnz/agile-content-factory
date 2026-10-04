@@ -11,9 +11,18 @@ import requests
 # --- FUNCIONES TÉCNICAS ---
 
 def validar_licencia_lemonsqueezy(license_key):
-    """Consulta la API de Lemon Squeezy para verificar la validez de la clave."""
     if not license_key:
         return False
+    
+    # 1. Validación prioritaria con los Secrets de Streamlit (Modo Administrador)
+    try:
+        clave_maestra = st.secrets.get("DEV_KEY", "")
+        if clave_maestra and license_key.strip() == str(clave_maestra).strip():
+            return True
+    except Exception:
+        pass
+
+    # 2. Validación con Lemon Squeezy (si la clave no es la de administrador)
     try:
         url = "https://api.lemonsqueezy.com/v1/licenses/validate"
         res = requests.post(url, data={"license_key": license_key.strip()}, timeout=5)
