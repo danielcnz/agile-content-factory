@@ -257,7 +257,7 @@ st.markdown("""
 
     /* 7. Encabezados de la vista principal */
     .main-title {
-        font-size: 6.3rem;
+        font-size: 4.1rem;
         font-weight: 800;
         letter-spacing: -0.03em;
         color: #EA580C;
