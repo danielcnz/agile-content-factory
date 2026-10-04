@@ -32,13 +32,13 @@ def validar_licencia_lemonsqueezy(license_key):
         return False
 
 def aplicar_marca_agua_centrada(img_base, texto="AGILE CONTENT FACTORY - FREE"):
-    """Estampa una marca de agua de alta visibilidad con fondo semitransparente."""
+    """Estampa una marca de agua suave y sutil (menos del 50% de intensidad anterior)."""
     ancho, alto = img_base.size
     
     capa_wm = Image.new("RGBA", (ancho, alto), (0, 0, 0, 0))
     draw_wm = ImageDraw.Draw(capa_wm)
     
-    tamano_wm = int(ancho * 0.065)
+    tamano_wm = int(ancho * 0.055)
     try:
         font_wm = ImageFont.truetype("Roboto-Bold.ttf", tamano_wm)
     except Exception:
@@ -48,25 +48,24 @@ def aplicar_marca_agua_centrada(img_base, texto="AGILE CONTENT FACTORY - FREE"):
     w_t = bbox[2] - bbox[0]
     h_t = bbox[3] - bbox[1]
     
-    pad_x, pad_y = 40, 20
+    pad_x, pad_y = 35, 16
     ancho_badge = w_t + (pad_x * 2)
     alto_badge = h_t + (pad_y * 2)
     
-    # Placa o cinta con fondo oscuro translúcido y texto blanco nítido
     img_texto = Image.new("RGBA", (ancho_badge, alto_badge), (0, 0, 0, 0))
     draw_txt = ImageDraw.Draw(img_texto)
     
-    # Fondo rectangular oscuro semitransparente detrás del texto
+    # 1. Fondo de la cápsula: se redujo el alfa de 175 a 70 (más de la mitad menos opaco)
     draw_txt.rounded_rectangle(
         [(0, 0), (ancho_badge, alto_badge)],
-        radius=18,
-        fill=(15, 23, 42, 175),       # Azul noche oscuro con buena opacidad
-        outline=(255, 255, 255, 120), # Borde fino blanco
-        width=2
+        radius=14,
+        fill=(15, 23, 42, 70),       # Fondo translúcido sutil
+        outline=(255, 255, 255, 50), # Borde fino con opacidad muy baja (antes 120)
+        width=1
     )
     
-    # Texto blanco de alto contraste
-    draw_txt.text((pad_x, pad_y), texto, font=font_wm, fill=(255, 255, 255, 230))
+    # 2. Texto: se redujo el alfa de 230 a 105 (blanco suave y translúcido)
+    draw_txt.text((pad_x, pad_y), texto, font=font_wm, fill=(255, 255, 255, 105))
     
     # Rotación en ángulo diagonal
     texto_rotado = img_texto.rotate(22, expand=True, resample=Image.Resampling.BICUBIC)
