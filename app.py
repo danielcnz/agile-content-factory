@@ -290,7 +290,7 @@ with st.sidebar:
         st.markdown("""
         <div class="upgrade-card">
             <p><strong>Versión Demo activa</strong><br>Máximo 3 posts con marca de agua central.</p>
-            <a href="https://lemonsqueezy.com" target="_blank" class="upgrade-btn">
+            <a href="https://agilecontentfactory.lemonsqueezy.com/checkout/buy/4a242f97-ea4b-4524-88fe-f0a5fd88989a">
                 ⚡ Desbloquear Modo Pro
             </a>
         </div>
